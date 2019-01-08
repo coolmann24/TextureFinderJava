@@ -131,58 +131,128 @@ public class TextureFinder
 	 {
 		 ArrayList<BlockFace> formation = new ArrayList<BlockFace>();
 		 
+		 ArrayList<ArrayList<BlockFace>> rotations = new ArrayList<ArrayList<BlockFace>>();
+		 
 		 /*
 		  * BUILD FORMATION
+		  * ---------------
+		  * EXAMPLE BELOW
 		  */
-		 formation.add(new BlockFace(0, 0, 0, Side.SOUTH, 3));
-		 formation.add(new BlockFace(1, 0, 0, Side.SOUTH, 1));
-		 formation.add(new BlockFace(2, 0, 0, Side.SOUTH, 1));
+		 formation.add(new BlockFace(0, 0, 0, Side.BOTTOM, 3));
+		 formation.add(new BlockFace(1, 0, 0, Side.BOTTOM, 1));
+		 formation.add(new BlockFace(2, 0, 0, Side.BOTTOM, 3));
 		 
-		 formation.add(new BlockFace(0, 1, 0, Side.SOUTH, 3));
-		 formation.add(new BlockFace(1, 1, 0, Side.SOUTH, 3));
-		 formation.add(new BlockFace(2, 1, 0, Side.SOUTH, 3));
+		 formation.add(new BlockFace(0, 0, 1, Side.BOTTOM, 1));
+		 formation.add(new BlockFace(1, 0, 1, Side.BOTTOM, 3));
+		 formation.add(new BlockFace(2, 0, 1, Side.BOTTOM, 0));
 		 
-		 formation.add(new BlockFace(0, 2, 0, Side.SOUTH, 0));
-		 formation.add(new BlockFace(1, 2, 0, Side.SOUTH, 3));
-		 formation.add(new BlockFace(2, 2, 0, Side.SOUTH, 3));
+		 formation.add(new BlockFace(0, 0, 2, Side.BOTTOM, 0));
+		 formation.add(new BlockFace(1, 0, 2, Side.BOTTOM, 1));
+		 formation.add(new BlockFace(2, 0, 2, Side.BOTTOM, 3));
 		 
-		 formation.add(new BlockFace(0, 3, 0, Side.SOUTH, 1));
-		 formation.add(new BlockFace(1, 3, 0, Side.SOUTH, 3));
-		 formation.add(new BlockFace(2, 3, 0, Side.SOUTH, 3));
+		 formation.add(new BlockFace(0, 0, 3, Side.BOTTOM, 2));
+		 formation.add(new BlockFace(1, 0, 3, Side.BOTTOM, 1));
+		 formation.add(new BlockFace(2, 0, 3, Side.BOTTOM, 3));
 		 
-		 formation.add(new BlockFace(0, 4, 0, Side.SOUTH, 1));
-		 formation.add(new BlockFace(1, 4, 0, Side.SOUTH, 2));
-		 formation.add(new BlockFace(2, 4, 0, Side.SOUTH, 3));
+		 formation.add(new BlockFace(0, 0, 4, Side.BOTTOM, 3));
+		 formation.add(new BlockFace(1, 0, 4, Side.BOTTOM, 2));
+		 formation.add(new BlockFace(2, 0, 4, Side.BOTTOM, 3));
+		 
+		 
+		 boolean useAllRotations = true;//set this to true if you don't know which direction is north
+		 
+		 rotations.add(formation);
+		 
+		 if(useAllRotations)
+		 {
+			 for(int i = 0; i < 3; i++)
+			 {
+				 rotations.add(rotate90deg(rotations.get(rotations.size()-1)));
+			 }
+		 }
+		 
+		 /*for(ArrayList<BlockFace> f : rotations)
+		 {
+			 for(BlockFace b : f)
+			 {
+				 System.out.println(b.getX() + " " + b.getY() + " " + b.getZ() + " " + b.getSide().toString() + " " + b.getRotation());
+			 }
+			 System.out.println();
+		 }*/
 		 
 		 
 		 
 		 long first=System.currentTimeMillis();
 		 
+		 /*
+		  * SEARCH PARAMETERS
+		  * MODIFY THESE
+		  */
+		 
 		 int xmin=-10000, xmax=10000;
 		 int zmin=-10000, zmax=10000;
-		 int ymin=56, ymax=56;
+		 int ymin=59, ymax=59;
 		 
 		 for(int x = xmin; x <= xmax; x++)
 			for(int z = zmin; z <= zmax; z++)
 				 for(int y = ymin; y <= ymax; y++)
 				 {
-					 boolean found=true;
-					 for(BlockFace b : formation)
+					 for(ArrayList<BlockFace> f : rotations)
 					 {
-						 
-						 int texture = TextureFinder.getTextureType(x + b.getX(), y+b.getY(), z+b.getZ(), 3/*version selection, 3 == 1.13, 1.14, 2 == 1.12 and before*/);
-						 
-						 if(!compatibleRotation(texture, b))
-						 {
-							 found=false;
-							 break;
-						 }
-					 }
-					 if(found) System.out.println("X: "+x+ " Y: "+y+ " Z: "+z);
 					 
+						 boolean found=true;
+						 for(BlockFace b : f)
+						 {
+						 
+							 int texture = getTextureType(x + b.getX(), y+b.getY(), z+b.getZ(), 3/*version selection, 3 == 1.13, 1.14, 2 == 1.12 and before*/);
+						 
+									 if(!compatibleRotation(texture, b))
+									 {
+										 found=false;
+										 break;
+									 }
+						 }
+						 if(found) System.out.println("X: "+x+ " Y: "+y+ " Z: "+z);
+					
+					 }
 				 }
 		 
 		
 		 System.out.println(((System.currentTimeMillis()-first)/1000) + " seconds");
+	 }
+	 
+	 public static ArrayList<BlockFace> rotate90deg(ArrayList<BlockFace> formation)
+	 {
+		 ArrayList<BlockFace> result = new ArrayList<BlockFace>();
+		 
+		 for(BlockFace b : formation)
+		 {
+			 Side newside = Side.NORTH;
+			 int rotation = -1;
+			 
+			if (b.getSide() == Side.TOP) newside = Side.TOP;
+			if (b.getSide() == Side.BOTTOM) newside = Side.BOTTOM;
+			if (b.getSide() == Side.WEST) newside = Side.SOUTH;
+			if (b.getSide() == Side.EAST) newside = Side.NORTH;
+			if (b.getSide() == Side.SOUTH) newside = Side.EAST;
+			if (b.getSide() == Side.NORTH) newside = Side.WEST;
+			
+			if(b.getSide() == Side.TOP)
+			{
+				rotation = (b.getRotation()+3)%4;
+			}
+			else if(b.getSide() == Side.BOTTOM)
+			{
+				rotation = (b.getRotation()+1)%4;
+			}
+			else
+			{
+				rotation = b.getRotation();
+			}
+			 
+			 result.add(new BlockFace(b.getZ(), b.getY(), -1*b.getX(), newside, rotation));
+		 }
+		 
+		 return result;
 	 }
 }
